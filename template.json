@@ -1,0 +1,44 @@
+{
+  "$note": "Build sheet for the tabsh Railway template. upsert.py writes the template straight from this file; it is the regeneration master (no source project is kept). Every non-obvious choice carries a $note.",
+  "$upstream": {
+    "repo": "https://github.com/Blaise1030/tabsh",
+    "pinnedRef": "v1.5.1",
+    "commitAtRecon": "0098e57df464b2c423c1ac660215b1f2cb88b87a",
+    "imagesBuiltBy": "https://github.com/hmseeb/tabsh-railway",
+    "whyOwnImage": "Upstream ships release binaries only, no container image. The image wraps the checksum-verified v1.5.1 binary (web UI embedded via build.rs) with Caddy. The binary needs glibc 2.39, so the base is node:22-trixie-slim (bookworm's 2.36 fails with GLIBC_2.39 not found)."
+  },
+  "services": {
+    "tabsh": {
+      "$note": "One container: Caddy on PORT in front of tabsh on 127.0.0.1:7681. tabsh's guard (src/web/guard.rs host_is_address) 403s any Host that is not localhost or an IP, with no env override, so Caddy rewrites Host to 127.0.0.1:7681. That makes every request a loopback peer, and tabsh hands its token to loopback browsers at /open, so Caddy basic auth gates everything except /api/* and /ws, which tabsh itself refuses without the token (none is a page in is_page). The app sends that token as Authorization: Bearer, which is why those two paths cannot also sit behind basic auth.",
+      "icon": "https://tabsh.cc/app/icon-512.png",
+      "source": { "image": "ghcr.io/hmseeb/tabsh-railway:1.5.1" },
+      "deploy": {
+        "startCommand": null,
+        "healthcheckPath": "/healthz",
+        "$healthNote": "Caddy serves /healthz without a password by proxying tabsh's public /app/manifest.webmanifest, so it fails when tabsh is down and leaks nothing.",
+        "restartPolicyType": "ON_FAILURE",
+        "restartPolicyMaxRetries": 10
+      },
+      "volumeMounts": {
+        "mountPath": "/data",
+        "$note": "HOME=/data/home in the image: tabsh state (~/.tabsh), shell history, cloned repos, npm globals and agent logins all survive redeploys. boot.sh removes lost+found and chowns HOME to node once."
+      },
+      "networking": { "serviceDomains": { "targetPort": 8080 } },
+      "variables": {
+        "TABSH_PASSWORD": {
+          "defaultValue": "${{secret(24)}}",
+          "description": "Password for the browser login (user: admin). Generated per deploy; read it from the Variables tab."
+        },
+        "TABSH_USER": {
+          "defaultValue": "admin",
+          "description": "Username for the browser login"
+        },
+        "PORT": {
+          "defaultValue": "8080",
+          "$note": "Caddy listens here and the domain targets it. tabsh also reads PORT, so boot.sh passes 7681 to it explicitly.",
+          "description": "Port Caddy listens on (the domain targets it)"
+        }
+      }
+    }
+  }
+}

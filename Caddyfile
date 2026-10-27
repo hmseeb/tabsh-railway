@@ -1,0 +1,40 @@
+{
+	admin off
+	auto_https off
+}
+
+(tabsh) {
+	# Same-origin requests only: tabsh still rejects every other Origin.
+	@own expression `{http.request.header.Origin} in ["https://" + {http.request.hostport}, "http://" + {http.request.hostport}]`
+	request_header @own Origin http://127.0.0.1:7681
+	# tabsh answers only to an IP or localhost Host (its DNS-rebinding guard).
+	reverse_proxy 127.0.0.1:7681 {
+		header_up Host 127.0.0.1:7681
+	}
+}
+
+:{$PORT} {
+	# Railway's healthchecker has no password: answer it with a public PWA
+	# asset, which proves tabsh is up and gives nothing away.
+	handle /healthz {
+		rewrite * /app/manifest.webmanifest
+		import tabsh
+	}
+
+	# The app sends tabsh's token in Authorization: Bearer, which would clash
+	# with basic auth. tabsh refuses every /api and /ws request without that
+	# token (none of them is a page in its guard), so they skip the password.
+	@tokened path /api/* /ws
+	handle @tokened {
+		import tabsh
+	}
+
+	handle {
+		basic_auth {
+			{$TABSH_USER} {$TABSH_PASSWORD_HASH}
+		}
+		# tabsh's own `/` sends you to tabsh.cc; `/open` pairs this copy of the app.
+		rewrite / /open
+		import tabsh
+	}
+}
