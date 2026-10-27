@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/tabsh status in_progress --hook",
+            "name": "tabsh-in-progress"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/tabsh status needs_input --hook --if-not completed",
+            "name": "tabsh-needs-input"
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/local/bin/tabsh status needs_input --hook --if-not completed --note 'Agent finished its turn'",
+            "name": "tabsh-turn-done"
+          }
+        ]
+      }
+    ]
+  }
+}

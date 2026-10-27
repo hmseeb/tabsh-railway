@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.version="${TABSH_VERSION}"
 
 # A usable dev box: agents need git, a shell, and sudo to install their own tools.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends bash ca-certificates curl git less openssh-client procps sudo vim-tiny \
+    && apt-get install -y --no-install-recommends bash bubblewrap ca-certificates curl git less openssh-client procps ripgrep sudo vim-tiny \
     && rm -rf /var/lib/apt/lists/* \
     && echo 'node ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/node && chmod 440 /etc/sudoers.d/node
 
@@ -24,19 +24,15 @@ RUN set -eu; \
     echo "$s  /tmp/t.tgz" | sha256sum -c -; \
     tar -xzf /tmp/t.tgz -C /tmp; install -m 755 /tmp/$f/tabsh /usr/local/bin/tabsh; rm -rf /tmp/t.tgz /tmp/$f
 
-# Agents ready on first boot (tabsh's default new-card command is `claude {prompt}`).
-# Installed to /usr/local, outside the volume; `npm i -g` from a shell installs to
-# /data/home/.npm-global, which is earlier on PATH, so upgrades win and persist.
-RUN npm i -g --prefix /usr/local @anthropic-ai/claude-code @openai/codex && npm cache clean --force
-
 # tabsh starts login shells, and Debian's /etc/profile resets PATH: put the
 # volume's npm and ~/.local bins back so installed agents are found.
 RUN echo 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' > /etc/profile.d/tabsh-path.sh
 
 COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
 COPY Caddyfile /etc/caddy/Caddyfile
-COPY boot.sh /usr/local/bin/boot.sh
-RUN chmod 755 /usr/local/bin/boot.sh
+COPY boot.sh agents.sh /usr/local/bin/
+COPY seed/home /usr/local/share/tabsh/home
+RUN chmod 755 /usr/local/bin/boot.sh /usr/local/bin/agents.sh
 
 ENV PORT=8080 TABSH_USER=admin TABSH_NO_BROWSER=1 SHELL=/bin/bash \
     HOME=/data/home NPM_CONFIG_PREFIX=/data/home/.npm-global \

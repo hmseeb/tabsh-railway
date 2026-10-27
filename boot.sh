@@ -12,6 +12,7 @@ unset TABSH_PASSWORD
 cd "$HOME"
 # tabsh would otherwise take Railway's PORT, and it logs its token: keep that out of deploy logs.
 exec setpriv --reuid=node --regid=node --init-groups bash -c '
+  /usr/local/bin/agents.sh
   { tabsh 7681 2>&1 | grep --line-buffered -v "#token="; } &
   caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
   wait -n; exit 1'

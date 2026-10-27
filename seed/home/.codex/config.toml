@@ -1,0 +1,14 @@
+# Pre-trusts the tabsh hooks in hooks.json (path + sha256 of each definition, as
+# Codex records them after /hooks "Trust all"). If a hook is edited, Codex asks
+# to review it again.
+
+[hooks.state]
+
+[hooks.state."/data/home/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:83e8e7f73646ea3081677e2c8678f714b7c6e65cb0fbb78eb7b1ea5b4923ff9e"
+
+[hooks.state."/data/home/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:cb317d2bd5c6fc06a7424579c8483758becc1a48d81eaa1bb11d002547d468bf"
+
+[hooks.state."/data/home/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:9de64c0d2d72a97540547e15cf3f2804ee94f0196148ef76f2fa9fcb69d3dfcb"

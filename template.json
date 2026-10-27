@@ -5,13 +5,15 @@
     "pinnedRef": "v1.5.1",
     "commitAtRecon": "0098e57df464b2c423c1ac660215b1f2cb88b87a",
     "imagesBuiltBy": "https://github.com/hmseeb/tabsh-railway",
-    "whyOwnImage": "Upstream ships release binaries only, no container image. The image wraps the checksum-verified v1.5.1 binary (web UI embedded via build.rs) with Caddy, plus Claude Code and Codex (latest at image build, in /usr/local so volume installs shadow them). The binary needs glibc 2.39, so the base is node:22-trixie-slim (bookworm's 2.36 fails with GLIBC_2.39 not found)."
+    "whyOwnImage": "Upstream ships release binaries only, no container image. The image wraps the checksum-verified v1.5.1 binary (web UI embedded via build.rs) with Caddy. The binary needs glibc 2.39, so the base is node:22-trixie-slim (bookworm's 2.36 fails with GLIBC_2.39 not found)."
   },
   "services": {
     "tabsh": {
       "$note": "One container: Caddy on PORT in front of tabsh on 127.0.0.1:7681. tabsh's guard (src/web/guard.rs host_is_address) 403s any Host that is not localhost or an IP, with no env override, so Caddy rewrites Host to 127.0.0.1:7681. That makes every request a loopback peer, and tabsh hands its token to loopback browsers at /open, so Caddy basic auth gates everything except /api/* and /ws, which tabsh itself refuses without the token (none is a page in is_page). The app sends that token as Authorization: Bearer, which is why those two paths cannot also sit behind basic auth.",
       "icon": "https://tabsh.cc/app/icon-512.png",
-      "source": { "image": "ghcr.io/hmseeb/tabsh-railway:1.5.1" },
+      "source": {
+        "image": "ghcr.io/hmseeb/tabsh-railway:1.5.1"
+      },
       "deploy": {
         "startCommand": null,
         "healthcheckPath": "/healthz",
@@ -23,7 +25,11 @@
         "mountPath": "/data",
         "$note": "HOME=/data/home in the image: tabsh state (~/.tabsh), shell history, cloned repos, npm globals and agent logins all survive redeploys. boot.sh removes lost+found and chowns HOME to node once."
       },
-      "networking": { "serviceDomains": { "targetPort": 8080 } },
+      "networking": {
+        "serviceDomains": {
+          "targetPort": 8080
+        }
+      },
       "variables": {
         "TABSH_PASSWORD": {
           "defaultValue": "${{secret(24)}}",
@@ -40,5 +46,10 @@
         }
       }
     }
+  },
+  "$agents": {
+    "$note": "agents.sh runs as node before tabsh on every boot: it seeds seed/home into HOME once (marker ~/.tabsh/agents-seeded, cp --update=none so existing files win), then npm installs the latest Claude Code, Codex, Gemini CLI and OpenCode into the volume (timeout 240, not fatal). Unpinned by request. First boot ~100s, restarts ~25s.",
+    "hooks": "Each agent's hooks call /usr/local/bin/tabsh status per tabsh's own src/cli/setup.md contract. Codex uses its lifecycle hooks (UserPromptSubmit, PermissionRequest, Stop), newer than setup.md's notify advice, and seed/home/.codex/config.toml pre-trusts them by the path+sha256 Codex writes after /hooks Trust all. OpenCode is 1.x (latest is 1.19.4; setup.md's plugin targets an unreleased 2.x), so the plugin uses the 1.x export shape and dedupes the repeated session.status busy events.",
+    "verified": "Card transitions proven per agent with test/agent-card.sh: Claude Code, Gemini CLI and OpenCode real runs reach in_progress then completed with the agent's note; Codex reaches in_progress with seeded trust (no OpenAI key, so Stop and completed are unproven)."
   }
 }

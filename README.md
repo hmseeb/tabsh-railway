@@ -11,9 +11,11 @@ Upstream ships release binaries that listen on 127.0.0.1 only. This image runs t
 | File | What it is |
 |---|---|
 | `Dockerfile`, `Caddyfile`, `boot.sh` | The image (`ghcr.io/hmseeb/tabsh-railway`) |
+| `agents.sh`, `seed/home/` | Installs the latest agents each boot and seeds their tabsh hooks once |
 | `template.json` | Template build sheet, the regeneration master |
 | `upsert.py`, `publish.py`, `deploy_as_stranger.py` | Write, publish and test-deploy the template |
 | `test/contract.sh` | Auth contract against a running deploy |
+| `test/agent-card.sh` | Runs one agent against a fresh card and prints the card's status changes |
 | `TEMPLATE_OVERVIEW.md` | Marketplace listing copy |
 
 Run locally:
