@@ -24,6 +24,11 @@ RUN set -eu; \
     echo "$s  /tmp/t.tgz" | sha256sum -c -; \
     tar -xzf /tmp/t.tgz -C /tmp; install -m 755 /tmp/$f/tabsh /usr/local/bin/tabsh; rm -rf /tmp/t.tgz /tmp/$f
 
+# Agents ready on first boot (tabsh's default new-card command is `claude {prompt}`).
+# Installed to /usr/local, outside the volume; `npm i -g` from a shell installs to
+# /data/home/.npm-global, which is earlier on PATH, so upgrades win and persist.
+RUN npm i -g --prefix /usr/local @anthropic-ai/claude-code @openai/codex && npm cache clean --force
+
 # tabsh starts login shells, and Debian's /etc/profile resets PATH: put the
 # volume's npm and ~/.local bins back so installed agents are found.
 RUN echo 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' > /etc/profile.d/tabsh-path.sh

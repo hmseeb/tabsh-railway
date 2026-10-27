@@ -5,7 +5,7 @@
     "pinnedRef": "v1.5.1",
     "commitAtRecon": "0098e57df464b2c423c1ac660215b1f2cb88b87a",
     "imagesBuiltBy": "https://github.com/hmseeb/tabsh-railway",
-    "whyOwnImage": "Upstream ships release binaries only, no container image. The image wraps the checksum-verified v1.5.1 binary (web UI embedded via build.rs) with Caddy. The binary needs glibc 2.39, so the base is node:22-trixie-slim (bookworm's 2.36 fails with GLIBC_2.39 not found)."
+    "whyOwnImage": "Upstream ships release binaries only, no container image. The image wraps the checksum-verified v1.5.1 binary (web UI embedded via build.rs) with Caddy, plus Claude Code and Codex (latest at image build, in /usr/local so volume installs shadow them). The binary needs glibc 2.39, so the base is node:22-trixie-slim (bookworm's 2.36 fails with GLIBC_2.39 not found)."
   },
   "services": {
     "tabsh": {

@@ -14,7 +14,7 @@ tabsh is a small Rust daemon that runs real PTY shells and serves its own web ap
 
 ## Dependencies for tabsh Hosting
 
-- One service built from `ghcr.io/hmseeb/tabsh-railway` (tabsh v1.5.1 plus Caddy, Node 22, git and sudo)
+- One service built from `ghcr.io/hmseeb/tabsh-railway` (tabsh v1.5.1 plus Caddy, Claude Code, Codex, Node 22, git and sudo)
 - One volume mounted at `/data`
 
 ### Deployment Dependencies
@@ -26,14 +26,7 @@ tabsh is a small Rust daemon that runs real PTY shells and serves its own web ap
 
 **Logging in.** Open the service's public URL. Your browser asks for a username and password: the username is `admin` and the password is the `TABSH_PASSWORD` variable on the service's Variables tab (generated per deploy). After login the app pairs itself automatically.
 
-**Installing an agent.** Open a shell card and install what you use, for example:
-
-```
-npm i -g @anthropic-ai/claude-code
-claude
-```
-
-Global npm installs land in `/data/home/.npm-global`, which is on the volume. You run as the `node` user with passwordless `sudo`, so `sudo apt-get install ...` works too (system packages do not survive a redeploy; anything under `/data/home` does). Then run `tabsh setup` inside an agent to let it move its own card on the board.
+**Agents.** Claude Code (`claude`) and Codex (`codex`) are preinstalled. Open a shell card and run either one, then log in or set `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` as service variables. Install other agents the same way you would locally, for example `npm i -g @google/gemini-cli`. Global npm installs land in `/data/home/.npm-global`, which is on the volume. You run as the `node` user with passwordless `sudo`, so `sudo apt-get install ...` works too (system packages do not survive a redeploy; anything under `/data/home` does). Then run `tabsh setup` inside an agent to let it move its own card on the board.
 
 **Security model.** Everything except the app's API is behind the password. The API (`/api/*`, `/ws`) is protected by tabsh's own 64-character pairing token, which the app receives only after the password login. Anyone with the password gets a shell on this container, so treat it like an SSH key: change `TABSH_PASSWORD` to rotate it. To revoke paired browsers too, delete `/data/home/.tabsh/token` and redeploy.
 
