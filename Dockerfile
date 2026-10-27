@@ -24,6 +24,10 @@ RUN set -eu; \
     echo "$s  /tmp/t.tgz" | sha256sum -c -; \
     tar -xzf /tmp/t.tgz -C /tmp; install -m 755 /tmp/$f/tabsh /usr/local/bin/tabsh; rm -rf /tmp/t.tgz /tmp/$f
 
+# tabsh starts login shells, and Debian's /etc/profile resets PATH: put the
+# volume's npm and ~/.local bins back so installed agents are found.
+RUN echo 'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"' > /etc/profile.d/tabsh-path.sh
+
 COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY boot.sh /usr/local/bin/boot.sh
